@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LimitYT</string>
+    <string name="a11y_label">LimitYT – giới hạn giờ xem</string>
+    <string name="a11y_description">Đếm giờ xem YouTube và chặn khi hết giờ hoặc trong giờ cấm. Do phụ huynh cài đặt.</string>
+</resources>

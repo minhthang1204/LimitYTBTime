@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="LimitYT.Agent/LimitYT.Agent.csproj" />
+  <Project Path="LimitYT.Cli/LimitYT.Cli.csproj" />
+  <Project Path="LimitYT.Core.Tests/LimitYT.Core.Tests.csproj" />
+  <Project Path="LimitYT.Core/LimitYT.Core.csproj" />
+  <Project Path="LimitYT.Service/LimitYT.Service.csproj" />
+</Solution>
