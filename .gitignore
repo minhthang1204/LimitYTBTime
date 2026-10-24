@@ -12,3 +12,6 @@ local.properties
 .idea/
 *.iml
 .kotlin/
+
+# Ghi nh? IP TV khi ch?y install-tv.ps1
+tv-ip.txt

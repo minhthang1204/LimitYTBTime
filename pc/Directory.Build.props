@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <Company>LimitYT</Company>
-    <Version>0.1.0</Version>
+    <!-- Số phiên bản dùng chung với app TV: file VERSION ở thư mục gốc. -->
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\VERSION').Trim())</Version>
   </PropertyGroup>
 </Project>

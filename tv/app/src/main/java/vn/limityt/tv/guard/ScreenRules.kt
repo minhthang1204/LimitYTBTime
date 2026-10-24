@@ -10,8 +10,11 @@ sealed interface Screen {
     /** Đang xem dịch vụ bị giới hạn (app YouTube, hoặc trình duyệt đang mở youtube.com/tiktok.com). */
     data class Limited(val serviceId: String) : Screen
 
-    /** Màn hình cần PIN: trình cài APK, trình dọn dẹp, trang Settings nhạy cảm. */
-    data class NeedsPin(val message: String) : Screen
+    /**
+     * Màn hình cần PIN: trình cài APK, trình dọn dẹp, trang Settings nhạy cảm.
+     * [back] = đóng bằng nút Back (hộp thoại cho phép ADB: Back nghĩa là "từ chối").
+     */
+    data class NeedsPin(val message: String, val back: Boolean = false) : Screen
 
     data object Normal : Screen
 }
@@ -31,10 +34,12 @@ class ScreenRules(config: LimitConfig, private val selfPackage: String) {
     private val cleaners = BUILTIN_CLEANERS + config.tv.cleanerPackages
     private val guardedSettings = BUILTIN_GUARDED_SETTINGS + config.tv.guardedSettingsPackages
     private val browsers = BUILTIN_BROWSERS + config.tv.browserPackages
-    private val guardedKeywords = keywordRegex(BUILTIN_KEYWORDS + config.tv.guardedKeywords)
+    private val guardedKeywords = keywordRegex(BUILTIN_KEYWORDS + ADB_KEYWORDS + config.tv.guardedKeywords)
+    private val adbKeywords = keywordRegex(ADB_KEYWORDS)
 
     /** Phân loại chỉ theo package và tên app — rẻ, gọi được ở mỗi sự kiện. */
     fun classifyPackage(pkg: String, appLabel: String?): Kind {
+        if (pkg in SYSTEM_UI) return Kind.SystemUi
         if (pkg in neverBlock) return Kind.NeverBlock
         servicePackages[pkg]?.let { return Kind.LimitedApp(it) }
         if (pkg in installers) return Kind.Installer
@@ -66,11 +71,16 @@ class ScreenRules(config: LimitConfig, private val selfPackage: String) {
         Kind.Cleaner -> Screen.NeedsPin("Cần PIN của phụ huynh để mở trình dọn dẹp")
         Kind.Settings -> if (settingsNeedPin(texts())) Screen.NeedsPin("Cần PIN của phụ huynh để mở mục cài đặt này") else Screen.Normal
         Kind.Browser -> browserService(texts())?.let { Screen.Limited(it) } ?: Screen.Normal
+        // Hộp thoại "Allow USB debugging?" khi một máy lạ (ví dụ điện thoại của con) kết nối ADB qua mạng.
+        // Bấm Allow là có toàn quyền gỡ app, nên cần PIN. Các cửa sổ khác của System UI không bao giờ bị chặn.
+        Kind.SystemUi -> if (texts().any { adbKeywords.containsMatchIn(it) })
+            Screen.NeedsPin("Cần PIN của phụ huynh để cho phép kết nối gỡ lỗi (ADB)", back = true) else Screen.NeverBlock
         Kind.Normal -> Screen.Normal
     }
 
     sealed interface Kind {
         data object NeverBlock : Kind
+        data object SystemUi : Kind
         data class LimitedApp(val serviceId: String) : Kind
         data object Installer : Kind
         data object Cleaner : Kind
@@ -79,16 +89,17 @@ class ScreenRules(config: LimitConfig, private val selfPackage: String) {
         data object Normal : Kind
 
         /** Cần đọc nội dung màn hình mới phân loại được. */
-        val needsContent: Boolean get() = this == Settings || this == Browser
+        val needsContent: Boolean get() = this == Settings || this == Browser || this == SystemUi
     }
 
     companion object {
         // Launcher, Live TV / nguồn vào HDMI. Package của Xiaomi lấy chính xác ở Giai đoạn 0.
         val BUILTIN_NEVER_BLOCK = setOf(
-            "com.android.tv", "com.google.android.tv", "com.android.systemui",
+            "com.android.tv", "com.google.android.tv",
             "com.google.android.tvlauncher", "com.google.android.apps.tv.launcherx", "com.android.tv.launcher",
             "com.mitv.tvhome", "com.mitv.tvhome.atv", "com.xiaomi.mitv.tvplayer", "com.mitv.livetv",
         )
+        val SYSTEM_UI = setOf("com.android.systemui")
         val BUILTIN_INSTALLERS = setOf("com.android.packageinstaller", "com.google.android.packageinstaller")
         val BUILTIN_CLEANERS = setOf("com.xiaomi.mitv.tvmanager", "com.mitv.tvmanager", "com.miui.cleanmaster")
         val BUILTIN_GUARDED_SETTINGS = setOf("com.android.tv.settings", "com.xiaomi.mitv.settings", "com.android.settings")
@@ -108,6 +119,13 @@ class ScreenRules(config: LimitConfig, private val selfPackage: String) {
             "Unknown sources", "Install unknown apps", "Nguồn không xác định", "Ứng dụng không rõ nguồn gốc",
             "Force stop", "Buộc dừng", "Device admin", "Quản trị thiết bị",
             "Factory reset", "Khôi phục cài đặt gốc", "Đặt lại về trạng thái ban đầu",
+        )
+
+        /** Hộp thoại / mục cho phép ADB (chỉ phụ huynh được bấm). */
+        val ADB_KEYWORDS = listOf(
+            "USB debugging", "Allow USB debugging", "Wireless debugging", "Network debugging", "ADB debugging",
+            "RSA key fingerprint", "Gỡ lỗi USB", "Gỡ lỗi qua USB", "Cho phép gỡ lỗi", "Gỡ lỗi không dây", "Gỡ lỗi qua mạng",
+            "vân tay khóa RSA", "vân tay khoá RSA",
         )
 
         private val CLEANER_LABEL = Regex("""clean|boost|dọn dẹp|tăng tốc|tv manager|quản lý tv|trình quản lý tv""", RegexOption.IGNORE_CASE)

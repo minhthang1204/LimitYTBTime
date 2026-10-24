@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using LimitYT.Core.Blocking;
 using LimitYT.Core.Config;
 using LimitYT.Core.Rules;
@@ -28,6 +29,10 @@ public class TitleMatcherTests
     [InlineData("Video — YouTube — Mozilla Firefox", "youtube")]
     [InlineData("TikTok - Make Your Day - Google Chrome", "tiktok")]
     [InlineData("Nhảy vui #fyp | TikTok - Google Chrome", "tiktok")]
+    [InlineData("Lofi radio - Invidious - Google Chrome", "youtube")]
+    [InlineData("Lofi radio - Piped - Mozilla Firefox", "youtube")]
+    [InlineData("Lofi radio - FreeTube", "youtube")]
+    [InlineData("Invidious - Google Chrome", "youtube")]
     public void Matches(string title, string expected) => Assert.Equal(expected, Matcher.Match(title));
 
     [Theory]
@@ -40,6 +45,37 @@ public class TitleMatcherTests
     [InlineData("tiktok downloader - Google Chrome")]
     [InlineData("")]
     public void DoesNotMatch(string title) => Assert.Null(Matcher.Match(title));
+}
+
+public class BlockedProcessTests
+{
+    private static readonly List<Regex> Patterns = Defaults.Create().PcBlockedProcessPatterns
+        .Select(p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)).ToList();
+
+    private static bool Blocked(string s) => Patterns.Any(r => r.IsMatch(s));
+
+    [Theory]
+    [InlineData("Opera Internet Browser")]
+    [InlineData("Opera GX Internet Browser")]
+    [InlineData("Tor Browser")]
+    [InlineData("Vivaldi")]
+    [InlineData("Chromium")]
+    [InlineData("Yandex")]
+    [InlineData("Avast Secure Browser")]
+    [InlineData("Psiphon 3")]
+    public void BlocksBrowsersWithoutPolicySupport(string product) => Assert.True(Blocked(product));
+
+    [Theory]
+    [InlineData("Google Chrome")]
+    [InlineData("Microsoft Edge")]
+    [InlineData("Brave Browser")]
+    [InlineData("Cốc Cốc")]
+    [InlineData("Firefox")]
+    [InlineData("Microsoft® Windows® Operating System")]
+    [InlineData("Visual Studio Code")]
+    [InlineData("LimitYT.Agent")]
+    [InlineData("Operation Center")]
+    public void KeepsAllowedPrograms(string product) => Assert.False(Blocked(product));
 }
 
 public class HostsFileTests

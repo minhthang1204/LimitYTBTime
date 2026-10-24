@@ -21,8 +21,14 @@ public sealed class BrowserPolicy(ILogger<BrowserPolicy> log)
 
     private static RegistryKey Hklm => RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
 
-    /// <summary>Áp thường trực: tắt DNS-over-HTTPS và QUIC để trình duyệt không bỏ qua file hosts.</summary>
-    public void ApplyBaseline()
+    /// <summary>
+    /// Áp thường trực:
+    /// - tắt DNS-over-HTTPS và QUIC để trình duyệt không bỏ qua file hosts;
+    /// - tắt DevTools và chặn mọi tiện ích (trừ <paramref name="extensionAllowlist"/>), vì cả hai đều đổi được
+    ///   tiêu đề tab YouTube thành tên khác (khi đó Agent không đếm giờ) hoặc thêm VPN/proxy;
+    /// - tắt cửa sổ Tor của Brave.
+    /// </summary>
+    public void ApplyBaseline(IReadOnlyCollection<string> extensionAllowlist)
     {
         if (AppPaths.DryRun) return;
         using var hklm = Hklm;
@@ -31,11 +37,23 @@ public sealed class BrowserPolicy(ILogger<BrowserPolicy> log)
             using var key = hklm.CreateSubKey(root);
             key.SetValue("DnsOverHttpsMode", "off", RegistryValueKind.String);
             key.SetValue("QuicAllowed", 0, RegistryValueKind.DWord);
+            key.SetValue("DeveloperToolsAvailability", 2, RegistryValueKind.DWord);
+            key.SetValue("TorDisabled", 1, RegistryValueKind.DWord);
+            RewriteList(hklm, root + @"\ExtensionInstallBlocklist", ["*"], includeOurs: true);
+            RewriteList(hklm, root + @"\ExtensionInstallAllowlist", extensionAllowlist, includeOurs: true, replaceAll: true);
         }
+
+        using var firefox = hklm.CreateSubKey(FirefoxRoot);
+        firefox.SetValue("DisableDeveloperTools", 1, RegistryValueKind.DWord);
+        firefox.SetValue("BlockAboutConfig", 1, RegistryValueKind.DWord);
+        var settings = new Dictionary<string, object> { ["*"] = new Dictionary<string, string> { ["installation_mode"] = "blocked" } };
+        foreach (var id in extensionAllowlist) settings[id] = new Dictionary<string, string> { ["installation_mode"] = "allowed" };
+        firefox.SetValue("ExtensionSettings", new[] { System.Text.Json.JsonSerializer.Serialize(settings) }, RegistryValueKind.MultiString);
+
         using var doh = hklm.CreateSubKey(FirefoxRoot + @"\DNSOverHTTPS");
         doh.SetValue("Enabled", 0, RegistryValueKind.DWord);
         doh.SetValue("Locked", 1, RegistryValueKind.DWord);
-        log.LogInformation("Đã áp policy tắt DoH/QUIC");
+        log.LogInformation("Đã áp policy: tắt DoH/QUIC/DevTools, chặn tiện ích (cho phép {Count})", extensionAllowlist.Count);
     }
 
     public void SetBlocklist(IReadOnlyCollection<string> domains, bool blocked)
@@ -58,10 +76,16 @@ public sealed class BrowserPolicy(ILogger<BrowserPolicy> log)
         using var hklm = Hklm;
         foreach (var root in ChromiumRoots)
         {
-            using var key = hklm.OpenSubKey(root, writable: true);
-            key?.DeleteValue("DnsOverHttpsMode", throwOnMissingValue: false);
-            key?.DeleteValue("QuicAllowed", throwOnMissingValue: false);
+            using (var key = hklm.OpenSubKey(root, writable: true))
+                foreach (var name in new[] { "DnsOverHttpsMode", "QuicAllowed", "DeveloperToolsAvailability", "TorDisabled" })
+                    key?.DeleteValue(name, throwOnMissingValue: false);
+            RewriteList(hklm, root + @"\ExtensionInstallBlocklist", ["*"], includeOurs: false);
+            // Danh sách cho phép do LimitYT quản lý toàn bộ: gỡ cả khoá.
+            hklm.DeleteSubKeyTree(root + @"\ExtensionInstallAllowlist", throwOnMissingSubKey: false);
         }
+        using (var firefox = hklm.OpenSubKey(FirefoxRoot, writable: true))
+            foreach (var name in new[] { "DisableDeveloperTools", "BlockAboutConfig", "ExtensionSettings" })
+                firefox?.DeleteValue(name, throwOnMissingValue: false);
         hklm.DeleteSubKeyTree(FirefoxRoot + @"\DNSOverHTTPS", throwOnMissingSubKey: false);
     }
 
@@ -70,7 +94,8 @@ public sealed class BrowserPolicy(ILogger<BrowserPolicy> log)
     private static IEnumerable<string> FirefoxEntries(IEnumerable<string> domains) =>
         domains.SelectMany(d => new[] { $"*://{d}/*", $"*://*.{d}/*" });
 
-    private static void RewriteList(RegistryKey hklm, string path, IEnumerable<string> ours, bool includeOurs)
+    /// <param name="replaceAll">true: bỏ cả các mục không phải của LimitYT (danh sách do LimitYT quản lý toàn bộ).</param>
+    private static void RewriteList(RegistryKey hklm, string path, IEnumerable<string> ours, bool includeOurs, bool replaceAll = false)
     {
         var ourSet = ours.ToHashSet(StringComparer.OrdinalIgnoreCase);
         using var key = includeOurs ? hklm.CreateSubKey(path) : hklm.OpenSubKey(path, writable: true);
@@ -80,7 +105,8 @@ public sealed class BrowserPolicy(ILogger<BrowserPolicy> log)
             .Select(n => (Name: n, Index: int.TryParse(n, out var i) ? i : int.MaxValue, Value: key.GetValue(n) as string))
             .OrderBy(x => x.Index)
             .ToList();
-        var others = existing.Where(x => x.Value is not null && !ourSet.Contains(x.Value)).Select(x => x.Value!).ToList();
+        List<string> others = replaceAll ? []
+            : existing.Where(x => x.Value is not null && !ourSet.Contains(x.Value)).Select(x => x.Value!).ToList();
         var desired = includeOurs ? others.Concat(ourSet).ToList() : others;
 
         var current = existing.Select(x => x.Value).ToList();

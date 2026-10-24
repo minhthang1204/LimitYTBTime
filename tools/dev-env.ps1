@@ -23,6 +23,7 @@ $env:ANDROID_HOME                   = "$root\android"
 $env:ANDROID_SDK_ROOT               = $env:ANDROID_HOME
 $env:ANDROID_USER_HOME              = "$root\android-home"   # debug keystore, adb key
 $env:GRADLE_USER_HOME               = "$root\gradle-home"
+$env:LIMITYT_SIGNING                = "$root\signing\keystore.properties"   # khoá ký APK release (ngoài repo)
 $env:GRADLE_OPTS                    = "-Djava.io.tmpdir=$root\tmp"
 # Không dùng JAVA_TOOL_OPTIONS: Java in dòng "Picked up..." ra stderr làm script PowerShell báo lỗi.
 # java.io.tmpdir trên Windows lấy từ biến TMP (đặt ở dưới); sdkmanager ghi ~/.android theo user.home.

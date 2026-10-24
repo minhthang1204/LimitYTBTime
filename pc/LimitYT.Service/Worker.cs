@@ -19,9 +19,8 @@ public sealed class Worker(
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        Try(policy.ApplyBaseline, "áp policy trình duyệt");
-
         var stopwatch = Stopwatch.StartNew();
+        string? appliedAllowlist = null;
         bool? policyBlocked = null;
         var lastPolicyWrite = DateTime.MinValue;
 
@@ -37,6 +36,14 @@ public sealed class Worker(
                 var result = controller.Tick(delta, session);
 
                 controller.EnforcementError = hosts.Ensure(result.Domains, result.Blocked);
+
+                // Áp lại policy thường trực khi khởi động và khi phụ huynh đổi danh sách tiện ích được phép.
+                var allowlist = string.Join("\n", result.ExtensionAllowlist);
+                if (allowlist != appliedAllowlist)
+                {
+                    Try(() => policy.ApplyBaseline(result.ExtensionAllowlist), "áp policy trình duyệt");
+                    appliedAllowlist = allowlist;
+                }
 
                 if (policyBlocked != result.Blocked || DateTime.UtcNow - lastPolicyWrite > PolicyRefresh)
                 {

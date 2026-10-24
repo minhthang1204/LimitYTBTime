@@ -7,7 +7,8 @@ using LimitYT.Service.Storage;
 
 namespace LimitYT.Service;
 
-public sealed record TickResult(bool Blocked, string Message, IReadOnlyCollection<string> Domains, bool AgentMissing);
+public sealed record TickResult(
+    bool Blocked, string Message, IReadOnlyCollection<string> Domains, bool AgentMissing, IReadOnlyCollection<string> ExtensionAllowlist);
 
 /// <summary>
 /// Trạng thái trung tâm của node PC: sổ ghi giờ, quyết định chặn, heartbeat của Agent.
@@ -106,7 +107,7 @@ public sealed partial class LimitController
 
             if (now - _lastPersist >= PersistInterval) PersistLocked(now);
 
-            return new TickResult(_blocked, _message, _config.AllDomains.ToList(), agentMissing);
+            return new TickResult(_blocked, _message, _config.AllDomains.ToList(), agentMissing, _config.BrowserExtensionAllowlist);
         }
     }
 
@@ -125,7 +126,8 @@ public sealed partial class LimitController
                 _config.Version,
                 _config.Services.Select(s => new ServicePatterns(s.Id, s.TitlePatterns)).ToList(),
                 _config.TitleExcludePatterns,
-                _config.AllPcExecutables.ToList());
+                _config.AllPcExecutables.ToList(),
+                _config.PcBlockedProcessPatterns);
         }
     }
 

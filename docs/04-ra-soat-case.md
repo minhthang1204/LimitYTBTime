@@ -34,6 +34,12 @@ Ký hiệu: **[TK]** đã cập nhật vào tài liệu thiết kế · **[GĐx]
 | B11 | Trình duyệt hiện "Do tổ chức của bạn quản lý" | Đây là hệ quả bình thường của policy; ghi chú trong hướng dẫn cho phụ huynh | [GĐ1] |
 | B12 | Có nhiều tài khoản Windows | Máy chỉ con dùng → áp dụng **cho cả máy**. Agent chạy trong mọi phiên đăng nhập. Tài khoản Admin của phụ huynh **phải có mật khẩu**; tắt tài khoản Guest | [TK] 01 §2 |
 | B13 | Kết nối HTTP/QUIC mở trước khi chặn vẫn tiếp tục chạy | Đã có: tắt QUIC + đóng cửa sổ | — |
+| B14 | Đổi tiêu đề tab YouTube bằng DevTools (`document.title = ...`) hoặc tiện ích kiểu "Tab Renamer" → Agent không đếm giờ, không đóng tab | Policy: `DeveloperToolsAvailability=2`, `ExtensionInstallBlocklist=["*"]` (Chrome/Edge/Brave/Cốc Cốc); `DisableDeveloperTools`, `BlockAboutConfig`, `ExtensionSettings {"*": blocked}` (Firefox). Tiện ích được phép đặt trong `browserExtensionAllowlist` | [GĐ1] (rà soát 24/10) |
+| B15 | Trình duyệt không nhận policy: Opera (có VPN sẵn), Tor Browser, Chromium/Vivaldi portable… → vượt `hosts` và DoH | Agent tắt ngay khi thấy, khớp `pcBlockedProcessPatterns` trên tên exe **và** ProductName/FileDescription (đổi tên exe không lọt). Kèm Psiphon, Lantern, Ultrasurf. Brave: `TorDisabled=1` | [GĐ1] (rà soát 24/10) |
+| B16 | Chép trình duyệt portable thành `explorer.exe` → Agent bỏ qua cửa sổ (trước đây bỏ qua theo tên) | Bỏ qua theo đường dẫn đầy đủ `%windir%\explorer.exe` | [GĐ1] (rà soát 24/10) |
+| B17 | Chương trình tự viết kết nối pipe Agent, gửi `watching = false` liên tục, rồi tắt Agent thật → giờ xem không bao giờ bị đếm | Service chỉ nhận heartbeat từ đúng `LimitYT.Agent.exe` trong thư mục cài (chỉ Admin ghi được), kiểm tra bằng `GetNamedPipeClientProcessId` + `QueryFullProcessImageName` | [GĐ1] (rà soát 24/10) |
+| B18 | Giao diện YouTube thay thế (Invidious, Piped, FreeTube, Poke): tiêu đề không có chữ "YouTube" | Thêm mẫu tiêu đề cho các tên này + domain một số instance phổ biến. Instance mới vẫn lọt `hosts`, nhưng vẫn bị đếm giờ và đóng theo tiêu đề | [GĐ1] (rà soát 24/10) |
+| B19 | Đổi múi giờ Windows (tài khoản Standard **được phép**) | Không ảnh hưởng: Service dùng giờ UTC + múi giờ trong cấu hình, không dùng múi giờ hệ thống | — |
 
 ## C. TV
 
@@ -53,6 +59,8 @@ Ký hiệu: **[TK]** đã cập nhật vào tài liệu thiết kế · **[GĐx]
 | C11 | Cài thêm biến thể khác: YouTube Kids, TikTok TV, APK YouTube/TikTok bản cũ | Danh sách package + chặn trình cài APK. App mới cài có tên chứa "Tube"/"Tok" thì tạm chặn và báo phụ huynh | [TK] 02 §4.1 |
 | C12 | Con chuyển Wi-Fi của TV sang hotspot điện thoại | TV vẫn chặn theo quy tắc cục bộ; mất đồng bộ thì chạy chế độ offline | — |
 | C13 | Bảng chọn nguồn vào HDMI bị chặn nhầm (đã nêu ở 01 §9) | `neverBlockPackages` được kiểm tra trước mọi luật khác; có kịch bản kiểm thử 19 | — |
+| C15 | Con cài app ADB trên điện thoại, kết nối tới TV qua mạng (Network debugging phải bật cho phụ huynh), rồi bấm **Allow** trên hộp thoại "Allow USB debugging?" bằng remote → có toàn quyền: gỡ app, tắt Accessibility | Hộp thoại của System UI có chữ "USB debugging / RSA key fingerprint / Gỡ lỗi USB" cần PIN: app bấm **Back** (= từ chối) rồi về Home. Phụ huynh muốn cho máy mới kết nối: nhập PIN → "Mở Cài đặt 10 phút". Máy tính đã chọn "Always allow" không bị hỏi lại | [GĐ2] (rà soát 24/10) |
+| C16 | Hộp thoại ADB xuất hiện khi app LimitYT bị tắt hoặc chưa cài | Không bảo vệ được. Chấp nhận: app chỉ tắt được qua đường đã bị khoá PIN | — |
 
 ## D. Đồng bộ & quản trị
 

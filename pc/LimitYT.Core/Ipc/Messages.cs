@@ -22,7 +22,8 @@ public sealed record AgentReply(
     int ConfigVersion,
     List<ServicePatterns> Patterns,
     List<string> TitleExcludes,
-    List<string> Executables);
+    List<string> Executables,
+    List<string> BlockedProcessPatterns);
 
 public sealed record AdminRequest(List<string> Args);
 

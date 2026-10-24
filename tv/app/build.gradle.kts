@@ -1,7 +1,18 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
+}
+
+// Số phiên bản dùng chung với PC: file VERSION ở thư mục gốc ("0.9.0" → versionCode 900).
+val appVersion = rootProject.file("../VERSION").readText().trim()
+val appVersionCode = appVersion.split('.').map { it.toInt() }.let { (major, minor, patch) -> major * 10_000 + minor * 100 + patch }
+
+// Keystore release nằm ngoài repo (tools/dev-env.ps1 đặt LIMITYT_SIGNING; tv/build-tv.ps1 tạo nếu chưa có).
+val signingProps = System.getenv("LIMITYT_SIGNING")?.let(::file)?.takeIf { it.isFile }?.let { f ->
+    Properties().apply { f.inputStream().use(::load) }.also { it["storeFile"] = f.resolveSibling(it.getProperty("storeFile")).path }
 }
 
 android {
@@ -13,16 +24,27 @@ android {
         applicationId = "vn.limityt.tv"
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = appVersionCode
+        versionName = appVersion
+    }
+
+    signingConfigs {
+        if (signingProps != null) create("release") {
+            storeFile = file(signingProps.getProperty("storeFile"))
+            storePassword = signingProps.getProperty("storePassword")
+            keyAlias = signingProps.getProperty("keyAlias")
+            keyPassword = signingProps.getProperty("keyPassword")
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            // App chỉ cài qua ADB, không lên Store: ký bằng debug key (giữ file
-            // %ANDROID_USER_HOME%\debug.keystore để cài đè bản mới mà không mất dữ liệu).
-            signingConfig = signingConfigs.getByName("debug")
+            // Phải ký cùng một khoá thì mới cài đè bản mới được mà không mất dữ liệu trên TV.
+            signingConfig = if (signingProps != null) signingConfigs.getByName("release") else {
+                logger.warn("LIMITYT_SIGNING chưa đặt: APK release được ký bằng debug key")
+                signingConfigs.getByName("debug")
+            }
         }
     }
 

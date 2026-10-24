@@ -20,6 +20,13 @@ public sealed class LimitConfig
     public Dictionary<string, int> OfflineCapPercent { get; set; } = new();
     public List<LimitedService> Services { get; set; } = [];
     public List<string> TitleExcludePatterns { get; set; } = [];
+    /// <summary>
+    /// Trình duyệt/VPN không nhận policy (vượt được hosts): Agent tắt ngay khi thấy.
+    /// Regex (không phân biệt hoa thường) khớp tên exe, ProductName hoặc FileDescription — đổi tên exe vẫn bị bắt.
+    /// </summary>
+    public List<string> PcBlockedProcessPatterns { get; set; } = [];
+    /// <summary>ID tiện ích trình duyệt được phép. Mọi tiện ích khác bị chặn và bị tắt.</summary>
+    public List<string> BrowserExtensionAllowlist { get; set; } = [];
     public TvConfig Tv { get; set; } = new();
     public string? AdminPinHash { get; set; }
 

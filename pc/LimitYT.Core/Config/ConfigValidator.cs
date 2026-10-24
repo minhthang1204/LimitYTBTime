@@ -53,6 +53,8 @@ public static class ConfigValidator
                 if (!IsValidRegex(p)) errors.Add($"Dịch vụ {s.Id}: regex tiêu đề không hợp lệ: {p}");
         foreach (var p in c.TitleExcludePatterns)
             if (!IsValidRegex(p)) errors.Add($"Regex loại trừ không hợp lệ: {p}");
+        foreach (var p in c.PcBlockedProcessPatterns)
+            if (!IsValidRegex(p)) errors.Add($"Regex chương trình bị chặn không hợp lệ: {p}");
 
         return errors;
     }

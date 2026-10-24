@@ -14,7 +14,7 @@ foreach ($project in 'LimitYT.Service', 'LimitYT.Agent', 'LimitYT.Cli') {
     dotnet publish (Join-Path $pc $project) -c Release -r win-x64 --self-contained true -p:DebugType=none -o $Output -v q
     if ($LASTEXITCODE) { throw "Đóng gói $project thất bại." }
 }
-Copy-Item (Join-Path $PSScriptRoot 'install\*.ps1') $Output
+Copy-Item (Join-Path $PSScriptRoot 'install\*') $Output -Include *.ps1, *.cmd
 
 $size = (Get-ChildItem $Output -Recurse | Measure-Object Length -Sum).Sum / 1MB
 Write-Host ("Xong: {0} ({1:N0} MB)" -f (Resolve-Path $Output), $size)

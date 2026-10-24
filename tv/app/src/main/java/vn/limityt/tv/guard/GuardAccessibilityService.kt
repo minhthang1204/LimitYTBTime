@@ -133,7 +133,7 @@ class GuardAccessibilityService : AccessibilityService() {
         val decision = guardian.evaluate()
         if (nowWatching && !decision.allowed) kick(decision)
         val screen = currentScreen
-        if (interactive && screen is Screen.NeedsPin && needsPin()) kick(screen.message, null)
+        if (interactive && screen is Screen.NeedsPin && needsPin()) kick(screen.message, null, screen.back)
 
         warnings.next(decision, nowWatching, guardian.config?.warnAtMinutesLeft.orEmpty())?.let {
             overlay.show("Còn $it phút xem YouTube")
@@ -161,7 +161,7 @@ class GuardAccessibilityService : AccessibilityService() {
         if (!enforce) return   // tick tự xử lý ngay sau đó
         when (screen) {
             is Screen.Limited -> guardian.evaluate().let { if (!it.allowed) kick(it) }
-            is Screen.NeedsPin -> if (needsPin()) kick(screen.message, null)
+            is Screen.NeedsPin -> if (needsPin()) kick(screen.message, null, screen.back)
             Screen.NeverBlock, Screen.Normal -> {}
         }
     }
@@ -177,11 +177,12 @@ class GuardAccessibilityService : AccessibilityService() {
         kick(decision.describe(), until?.let { BlockActivity.formatUntil(it) })
     }
 
-    private fun kick(message: String, untilText: String?) {
+    private fun kick(message: String, untilText: String?, back: Boolean = false) {
         val now = SystemClock.elapsedRealtime()
         if (now - lastKickElapsed < KICK_DEBOUNCE_MS) return
         lastKickElapsed = now
         guardian.flush()
+        if (back) performGlobalAction(GLOBAL_ACTION_BACK)
         performGlobalAction(GLOBAL_ACTION_HOME)
         startActivity(BlockActivity.intent(this, message, untilText))
         currentScreen = Screen.Normal

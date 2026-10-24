@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using LimitYT.Core.Blocking;
 using LimitYT.Core.Ipc;
 using Microsoft.Win32;
@@ -16,11 +17,13 @@ internal sealed class AgentContext : ApplicationContext
     private readonly NotifyIcon _tray;
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 5000 };
     private readonly ServiceClient _client = new();
-    private readonly WindowWatcher _watcher = new();
+    private readonly ProcessInspector _processes = new();
+    private readonly WindowWatcher _watcher;
     private readonly TabCloser _closer = new();
     private readonly DisplayStateWatcher _display = new();
 
     private TitleMatcher? _matcher;
+    private List<Regex> _blockedProcesses = [];
     private int _configVersion = -1;
     private bool _locked;
     private bool _busy;
@@ -29,6 +32,7 @@ internal sealed class AgentContext : ApplicationContext
 
     public AgentContext()
     {
+        _watcher = new WindowWatcher(_processes);
         var menu = new ContextMenuStrip();
         menu.Items.Add("Xem thời gian còn lại", null, (_, _) => ShowStatus());
         _tray = new NotifyIcon
@@ -72,11 +76,16 @@ internal sealed class AgentContext : ApplicationContext
             if (reply.ConfigVersion != _configVersion)
             {
                 _matcher = new TitleMatcher(reply.Patterns.Select(p => (p.ServiceId, (IEnumerable<string>)p.Patterns)), reply.TitleExcludes);
+                _blockedProcesses = reply.BlockedProcessPatterns
+                    .Select(p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100)))
+                    .ToList();
                 _configVersion = reply.ConfigVersion;
                 hits = _watcher.Scan(_matcher);
             }
 
             TabCloser.KillExecutables(reply.Executables);
+            foreach (var name in _processes.KillMatching(_blockedProcesses))
+                Balloon($"{name} không được phép dùng trên máy này.", ToolTipIcon.Warning);
             if (reply.Blocked && hits.Count > 0) _closer.Close(hits);
 
             if (reply.Blocked && _wasBlocked != true && hits.Count > 0)

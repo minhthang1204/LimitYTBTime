@@ -117,6 +117,17 @@ class ScreenRulesTest {
     }
 
     @Test
+    fun adbAuthorizationDialogNeedsPinAndIsDismissedWithBack() {
+        val dialog = screen("com.android.systemui", null, "Allow USB debugging?", "The computer's RSA key fingerprint is: AB:CD")
+        assertEquals(Screen.NeedsPin("Cần PIN của phụ huynh để cho phép kết nối gỡ lỗi (ADB)", back = true), dialog)
+        assertTrue(screen("com.android.systemui", null, "Cho phép gỡ lỗi USB?") is Screen.NeedsPin)
+        // Các cửa sổ khác của System UI (âm lượng, thông báo) không bao giờ bị chặn.
+        assertEquals(Screen.NeverBlock, screen("com.android.systemui", null, "Âm lượng", "YouTube"))
+        // Bật ADB trong Settings cũng cần PIN.
+        assertTrue(screen("com.android.tv.settings", null, "Network debugging") is Screen.NeedsPin)
+    }
+
+    @Test
     fun installersAndCleanersNeedPin() {
         assertTrue(screen("com.google.android.packageinstaller") is Screen.NeedsPin)
         assertTrue(screen("com.x.clean") is Screen.NeedsPin)

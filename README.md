@@ -7,6 +7,10 @@ Giới hạn thời gian xem **YouTube và TikTok** trên **máy tính Windows**
 - **cảnh báo** trước khi hết giờ;
 - reset Thứ Hai 00:00; chỉ phụ huynh được cộng giờ hoặc mở khoá.
 
+## Cài đặt
+
+👉 **[Hướng dẫn cài đặt & tải bản phát hành](CAI-DAT.md)**: tải [LimitYT-PC.zip](https://github.com/minhthang1204/LimitYTBTime/releases/latest/download/LimitYT-PC.zip) · [LimitYT-TV.zip](https://github.com/minhthang1204/LimitYTBTime/releases/latest/download/LimitYT-TV.zip) · [mọi phiên bản](https://github.com/minhthang1204/LimitYTBTime/releases)
+
 > Trạng thái: **Giai đoạn 1 (PC)** và **Giai đoạn 2 (TV)** đã code xong, chưa cài thử trên máy thật. Đồng bộ LAN (Giai đoạn 3) chưa làm, nên hiện PC và TV **đếm giờ riêng**, mỗi bên tự áp quota.
 
 ## Cách hoạt động (tóm tắt)
@@ -43,41 +47,22 @@ dotnet test pc\LimitYT.Core.Tests     # test PC, gồm 27 ca trong spec/rules-te
 .\tv\build-tv.ps1                     # test TV (cùng 27 ca) + APK → out\tv
 ```
 
+Bản phát hành (số phiên bản lấy từ file `VERSION`, dùng chung cho PC và TV):
+
+```powershell
+.\tools\release.ps1                   # → out\release\<phiên bản>\LimitYT-PC.zip, LimitYT-TV.zip, SHA256SUMS.txt
+```
+
+Cách đưa lên GitHub Releases: xem mục *Phát hành bản mới* trong [CAI-DAT.md](CAI-DAT.md).
+
+APK được ký bằng khoá release trong `E:\DevTools\signing\` (`limityt-release.jks` + `keystore.properties`, tự tạo ở lần build đầu, nằm ngoài repo). **Hãy sao lưu thư mục này**: nếu mất khoá, bản mới không cài đè lên TV được, phải gỡ app và mất số giờ đã đếm trên TV.
+
 Chạy thử PC mà không sửa file hosts/registry của máy:
 
 ```powershell
 $env:LIMITYT_DATA_DIR = 'E:\DevTools\tmp\limityt-smoke'
 pc\LimitYT.Service\bin\Debug\net10.0-windows\win-x64\LimitYT.Service.exe --dry-run
 ```
-
-## Cài lên máy của con
-
-Chép thư mục `out\pc` sang máy của con. Mở PowerShell bằng **Run as administrator** trong thư mục đó, rồi chạy:
-
-```powershell
-.\install-pc.ps1                              # mặc định cài vào Program Files
-.\install-pc.ps1 -InstallDir 'E:\LimitYT'     # hoặc ổ khác nếu ổ C đầy
-& 'C:\Program Files\LimitYT\limityt.exe' status
-```
-
-Gỡ cài đặt bằng `.\uninstall-pc.ps1`. Script trả file hosts và policy trình duyệt về như cũ.
-
-## Cài lên TV
-
-1. Trên TV: *Settings → Device Preferences → About* → bấm 7 lần vào *Build*. Vào *Developer options* → bật **USB debugging** và **Network debugging**.
-2. Trên máy tính, trong thư mục `out\tv` (có sẵn `adb.exe`):
-
-```powershell
-.\install-tv.ps1 -TvIp 192.168.1.50           # hỏi PIN phụ huynh 6 số ở lần đầu
-.\install-tv.ps1 -TvIp 192.168.1.50 -ChangePin
-.\uninstall-tv.ps1 -TvIp 192.168.1.50
-```
-
-Lần đầu kết nối, TV hiện hộp thoại "Allow USB debugging?" → chọn **Always allow**. Muốn cài bản mới thì chạy lại `install-tv.ps1`, dữ liệu được giữ nguyên.
-
-Trên TV, mở app **LimitYT** để xem còn bao nhiêu giờ. Nút **Phụ huynh (PIN)** để cộng giờ, mở Cài đặt 10 phút, hoặc tắt bảo vệ trước khi gỡ.
-
-> APK được ký bằng debug key ở `E:\DevTools\android-home\debug.keystore`. Hãy giữ file này: nếu mất, bản build mới không cài đè được và phải gỡ app (mất số giờ đã đếm trên TV).
 
 ## Điều kiện để chặn có hiệu quả
 

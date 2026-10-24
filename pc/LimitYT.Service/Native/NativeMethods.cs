@@ -24,6 +24,34 @@ internal static class NativeMethods
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern bool GetNamedPipeClientSessionId(SafePipeHandle pipe, out uint sessionId);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern bool GetNamedPipeClientProcessId(SafePipeHandle pipe, out uint processId);
+
+    public const uint ProcessQueryLimitedInformation = 0x1000;
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    public static extern IntPtr OpenProcess(uint access, bool inheritHandle, uint processId);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool QueryFullProcessImageName(IntPtr process, int flags, StringBuilder name, ref int size);
+
+    /// <summary>Đường dẫn exe của tiến trình, hoặc null nếu không mở được.</summary>
+    public static string? GetProcessImagePath(uint processId)
+    {
+        var handle = OpenProcess(ProcessQueryLimitedInformation, false, processId);
+        if (handle == IntPtr.Zero) return null;
+        try
+        {
+            var size = 1024;
+            var sb = new StringBuilder(size);
+            return QueryFullProcessImageName(handle, 0, sb, ref size) ? sb.ToString() : null;
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
+    }
+
     [DllImport("userenv.dll", SetLastError = true)]
     public static extern bool CreateEnvironmentBlock(out IntPtr environment, IntPtr token, bool inherit);
 

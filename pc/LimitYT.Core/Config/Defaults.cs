@@ -27,11 +27,16 @@ public static class Defaults
                 [
                     "youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be",
                     "youtube-nocookie.com", "www.youtube-nocookie.com", "youtubei.googleapis.com", "i.ytimg.com",
+                    // Một số instance Invidious/Piped phổ biến (danh sách thay đổi thường xuyên; tiêu đề vẫn là lớp chính).
+                    "yewtu.be", "inv.nadeko.net", "invidious.nerdvpn.de", "piped.video", "poketube.fun",
                 ],
                 TitlePatterns =
                 [
                     @"(?<=\S\s)[-–—|]\sYouTube( Music)?" + SegmentEnd,
                     @"^(\(\d+\)\s)?YouTube( Music)?" + SegmentEnd,
+                    // Giao diện YouTube thay thế: tiêu đề không có chữ "YouTube".
+                    @"(?<=\S\s)[-–—|]\s(Invidious|Piped|FreeTube|Poke|Hyperpipe)" + SegmentEnd,
+                    @"^(Invidious|Piped|FreeTube|Poke)" + SegmentEnd,
                 ],
                 TvPackages =
                 [
@@ -61,6 +66,16 @@ public static class Defaults
         TitleExcludePatterns =
         [
             @"Tìm với Google|Tìm trên Google|Tìm kiếm Google|Google Search|\s-\sBing\b|Cốc Cốc Search|DuckDuckGo",
+        ],
+        // Chỉ cho dùng các trình duyệt nhận policy (Chrome, Edge, Brave, Cốc Cốc, Firefox).
+        PcBlockedProcessPatterns =
+        [
+            @"^Opera\b", @"Tor Browser", @"^Vivaldi", @"^Chromium$", @"Yandex", @"UC ?Browser", @"Maxthon",
+            @"Waterfox", @"LibreWolf", @"Floorp", @"Pale ?Moon", @"Basilisk", @"Thorium", @"Supermium", @"Iridium",
+            @"Slimjet", @"Comodo Dragon", @"Secure Browser", @"CCleaner Browser", @"Epic Privacy", @"SRWare Iron",
+            @"Cent ?Browser", @"Ungoogled",
+            // VPN/proxy chạy được không cần quyền Admin
+            @"Psiphon", @"Lantern", @"Ultrasurf",
         ],
         Tv = new TvConfig
         {

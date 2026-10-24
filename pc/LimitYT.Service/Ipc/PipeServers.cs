@@ -93,8 +93,23 @@ public sealed class AgentPipeServer(LimitController controller, ILogger<AgentPip
     protected override PipeSecurity CreateSecurity() =>
         Security((WellKnownSidType.AuthenticatedUserSid, PipeAccessRights.ReadWrite));
 
+    private static readonly string AgentPath = Path.Combine(AppContext.BaseDirectory, "LimitYT.Agent.exe");
+
     protected override string Handle(NamedPipeServerStream pipe, string line)
     {
+        // Chỉ nhận heartbeat từ đúng LimitYT.Agent.exe trong thư mục cài (chỉ Admin ghi được). Nếu không,
+        // một chương trình tự viết có thể gửi "watching = false" mãi để giờ xem không bao giờ bị đếm.
+        if (!AppPaths.DryRun)
+        {
+            var clientPath = NativeMethods.GetNamedPipeClientProcessId(pipe.SafePipeHandle, out var pid)
+                ? NativeMethods.GetProcessImagePath(pid) : null;
+            if (!string.Equals(clientPath, AgentPath, StringComparison.OrdinalIgnoreCase))
+            {
+                logger.LogWarning("Từ chối heartbeat từ chương trình lạ: {Path}", clientPath ?? "?");
+                throw new UnauthorizedAccessException("Chỉ LimitYT.Agent được gửi heartbeat");
+            }
+        }
+
         var heartbeat = PipeJson.Deserialize<AgentHeartbeat>(line) ?? throw new InvalidDataException("Heartbeat rỗng");
         // Lấy session từ chính kết nối pipe thay vì tin số do Agent gửi.
         if (!NativeMethods.GetNamedPipeClientSessionId(pipe.SafePipeHandle, out var sessionId))
