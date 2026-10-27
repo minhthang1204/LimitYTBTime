@@ -1,8 +1,8 @@
-﻿# Dot-source trước khi build: . .\tools\dev-env.ps1
+# Dot-source trước khi build: . .\tools\dev-env.ps1
 # Đặt .NET SDK, Android SDK, Gradle, NuGet cache và thư mục tạm lên ổ E để không dùng dung lượng ổ C.
 # Chỉ có tác dụng trong phiên PowerShell hiện tại, không sửa PATH hệ thống.
 
-$root = if ($env:LIMITYT_DEVTOOLS) { $env:LIMITYT_DEVTOOLS } else { 'E:\DevTools' }
+$root = if ($env:LIMITYT_DEVTOOLS) { $env:LIMITYT_DEVTOOLS } elseif (Test-Path 'D:\DevTools') { 'D:\DevTools' } else { 'E:\DevTools' }
 
 # --- .NET (PC) ---
 $env:DOTNET_ROOT                    = "$root\dotnet"
@@ -18,6 +18,7 @@ $env:DOTNET_MULTILEVEL_LOOKUP       = '0'
 # --- Android (TV) ---
 # JDK 17 có sẵn trên máy; đặt LIMITYT_JAVA_HOME nếu muốn dùng JDK khác.
 if ($env:LIMITYT_JAVA_HOME) { $env:JAVA_HOME = $env:LIMITYT_JAVA_HOME }
+elseif (-not $env:JAVA_HOME -and (Test-Path "$root\jdk-17")) { $env:JAVA_HOME = "$root\jdk-17" }
 elseif (-not $env:JAVA_HOME -and (Test-Path 'D:\sdk\java\jdk-17')) { $env:JAVA_HOME = 'D:\sdk\java\jdk-17' }
 $env:ANDROID_HOME                   = "$root\android"
 $env:ANDROID_SDK_ROOT               = $env:ANDROID_HOME
@@ -30,8 +31,10 @@ $env:GRADLE_OPTS                    = "-Djava.io.tmpdir=$root\tmp"
 $env:SDKMANAGER_OPTS                = "-Duser.home=$root\java-home"
 $env:JAVA_TOOL_OPTIONS              = $null
 
-$env:TEMP                           = "$root\tmp"
-$env:TMP                            = "$root\tmp"
+if (-not $env:LIMITYT_KEEP_TEMP) {
+    $env:TEMP                           = "$root\tmp"
+    $env:TMP                            = "$root\tmp"
+}
 
 $paths = @($env:DOTNET_ROOT, "$env:ANDROID_HOME\platform-tools", "$env:ANDROID_HOME\cmdline-tools\latest\bin", "$root\gradle\gradle-8.11.1\bin")
 if ($env:JAVA_HOME) { $paths = @("$env:JAVA_HOME\bin") + $paths }

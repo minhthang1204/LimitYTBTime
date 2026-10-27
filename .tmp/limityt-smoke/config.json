@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "updatedAtUtc": "2026-10-25T11:39:28.4518728+00:00",
+  "timeZone": "Asia/Ho_Chi_Minh",
+  "weekStart": "Mon",
+  "weeklyQuotaMinutes": 420,
+  "dailyQuotaMinutes": 90,
+  "holidayDailyQuotaMinutes": null,
+  "blockedWindows": [
+    {
+      "days": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ],
+      "from": "22:00",
+      "to": "06:00",
+      "schoolOnly": false
+    },
+    {
+      "days": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri"
+      ],
+      "from": "07:00",
+      "to": "11:00",
+      "schoolOnly": true
+    },
+    {
+      "days": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri"
+      ],
+      "from": "13:00",
+      "to": "17:00",
+      "schoolOnly": true
+    }
+  ],
+  "holidays": [],
+  "holidayOverrides": {},
+  "warnAtMinutesLeft": [
+    15,
+    5
+  ],
+  "offlineCapPercent": {
+    "pc": 50,
+    "tv": 100
+  },
+  "services": [
+    {
+      "id": "youtube",
+      "domains": [
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "music.youtube.com",
+        "youtu.be",
+        "youtube-nocookie.com",
+        "www.youtube-nocookie.com",
+        "youtubei.googleapis.com",
+        "i.ytimg.com",
+        "yewtu.be",
+        "inv.nadeko.net",
+        "invidious.nerdvpn.de",
+        "piped.video",
+        "poketube.fun"
+      ],
+      "titlePatterns": [
+        "(?\u003C=\\S\\s)[-\u2013\u2014|]\\sYouTube( Music)?(?=$|\\s[-\u2013\u2014|]\\s|\\s(and|v\u00E0)\\s\\d)",
+        "^(\\(\\d\u002B\\)\\s)?YouTube( Music)?(?=$|\\s[-\u2013\u2014|]\\s|\\s(and|v\u00E0)\\s\\d)",
+        "(?\u003C=\\S\\s)[-\u2013\u2014|]\\s(Invidious|Piped|FreeTube|Poke|Hyperpipe)(?=$|\\s[-\u2013\u2014|]\\s|\\s(and|v\u00E0)\\s\\d)",
+        "^(Invidious|Piped|FreeTube|Poke)(?=$|\\s[-\u2013\u2014|]\\s|\\s(and|v\u00E0)\\s\\d)"
+      ],
+      "tvPackages": [
+        "com.google.android.youtube.tv",
+        "com.google.android.youtube.tvkids",
+        "com.google.android.youtube.tvmusic",
+        "com.liskovsoft.smarttubetv",
+        "com.liskovsoft.smarttubetv.beta",
+        "com.teamsmart.videomanager.tv"
+      ],
+      "pcExecutables": [
+        "FreeTube.exe",
+        "yt-dlp.exe"
+      ]
+    },
+    {
+      "id": "tiktok",
+      "domains": [
+        "tiktok.com",
+        "www.tiktok.com",
+        "m.tiktok.com",
+        "vt.tiktok.com",
+        "vm.tiktok.com",
+        "tiktokv.com",
+        "www.tiktokv.com"
+      ],
+      "titlePatterns": [
+        "(?\u003C=\\S\\s)[-\u2013\u2014|]\\sTikTok(?=$|\\s[-\u2013\u2014|]\\s|\\s(and|v\u00E0)\\s\\d)",
+        "^(\\(\\d\u002B\\)\\s)?TikTok(?=$|\\s[-\u2013\u2014|]\\s|\\s(and|v\u00E0)\\s\\d)"
+      ],
+      "tvPackages": [
+        "com.ss.android.ugc.trill",
+        "com.zhiliaoapp.musically"
+      ],
+      "pcExecutables": [
+        "TikTok.exe"
+      ]
+    }
+  ],
+  "titleExcludePatterns": [
+    "T\u00ECm v\u1EDBi Google|T\u00ECm tr\u00EAn Google|T\u00ECm ki\u1EBFm Google|Google Search|\\s-\\sBing\\b|C\u1ED1c C\u1ED1c Search|DuckDuckGo"
+  ],
+  "pcBlockedProcessPatterns": [
+    "^Opera\\b",
+    "Tor Browser",
+    "^Vivaldi",
+    "^Chromium$",
+    "Yandex",
+    "UC ?Browser",
+    "Maxthon",
+    "Waterfox",
+    "LibreWolf",
+    "Floorp",
+    "Pale ?Moon",
+    "Basilisk",
+    "Thorium",
+    "Supermium",
+    "Iridium",
+    "Slimjet",
+    "Comodo Dragon",
+    "Secure Browser",
+    "CCleaner Browser",
+    "Epic Privacy",
+    "SRWare Iron",
+    "Cent ?Browser",
+    "Ungoogled",
+    "Psiphon",
+    "Lantern",
+    "Ultrasurf"
+  ],
+  "browserExtensionAllowlist": [],
+  "tv": {
+    "enabled": false,
+    "host": null,
+    "port": 5555,
+    "guardedSettingsPackages": [
+      "com.android.tv.settings",
+      "com.xiaomi.mitv.settings"
+    ],
+    "neverBlockPackages": [],
+    "installerPackages": [
+      "com.android.packageinstaller",
+      "com.google.android.packageinstaller"
+    ],
+    "cleanerPackages": []
+  },
+  "adminPinHash": null,
+  "allDomains": [
+    "youtube.com",
+    "www.youtube.com",
+    "m.youtube.com",
+    "music.youtube.com",
+    "youtu.be",
+    "youtube-nocookie.com",
+    "www.youtube-nocookie.com",
+    "youtubei.googleapis.com",
+    "i.ytimg.com",
+    "yewtu.be",
+    "inv.nadeko.net",
+    "invidious.nerdvpn.de",
+    "piped.video",
+    "poketube.fun",
+    "tiktok.com",
+    "www.tiktok.com",
+    "m.tiktok.com",
+    "vt.tiktok.com",
+    "vm.tiktok.com",
+    "tiktokv.com",
+    "www.tiktokv.com"
+  ],
+  "allPcExecutables": [
+    "FreeTube.exe",
+    "yt-dlp.exe",
+    "TikTok.exe"
+  ]
+}
